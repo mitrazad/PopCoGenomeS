@@ -1,4 +1,10 @@
-configfile=./phybreak_config.sh
+#!/usr/bin/env bash
+
+# Mitra: added this
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+
+# Annie: configfile=../phybreak_config.sh
+configfile=$SCRIPT_DIR/phybreak_config.sh
 source ${configfile}
 
 #copy genomes from population to project_dir/genomes
@@ -26,24 +32,32 @@ echo $genome_ext
 
 #find ref_isolate
 seqkit stats -b -N 50 ${project_dir}/genomes/*${genome_ext} > genome_info
-grep -f ${project_dir}/align_and_construct_trees/pop_names genome_info > genome_info_select
+# Annie:grep -f ${project_dir}/align_and_construct_trees/pop_names genome_info > genome_info_select
+grep -f pop_names genome_info > genome_info_select
 sed -i 's/'"${genome_ext}"'//g' genome_info_select
-ref_iso=$(awk -v max=0 '{if($NF>max){want=$1; max=$NF}}END{print want}' genome_info_select)
+
+# Mitra: choose ref isolate by N50, then sanitize its name to match phybreak1.generate_maf.py
+ref_iso_raw=$(awk -v max=0 '{n=$NF; gsub(",","",n); if(n+0>max){want=$1; max=n+0}}END{print want}' genome_info_select)
+ref_iso=$(echo $ref_iso_raw | sed 's/[.-]//g')
 ref_contig=${ref_iso}_1
 echo $ref_iso
 
 #stitch ref_genome together
 #head ${project_dir}/genomes/${ref_iso}${genome_ext}
-awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' ${project_dir}/genomes/${ref_iso}${genome_ext} > ${project_dir}/genomes/${ref_iso}_linear.fna
-awk -F'\t' '{print $2}' ${project_dir}/genomes/${ref_iso}_linear.fna > ${project_dir}/genomes/newOH.fna
+# Annie: awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' ${project_dir}/genomes/${ref_iso}${genome_ext} > ${project_dir}/genomes/${ref_iso}_linear.fna
+awk '/^>/ {printf("%s%s\t",(N>0?"\n":""),$0);N++;next;} {printf("%s",$0);} END {printf("\n");}' ${project_dir}/genomes/${ref_iso_raw}${genome_ext} > ${project_dir}/genomes/${ref_iso_raw}_linear.fna
+# Annie:awk -F'\t' '{print $2}' ${project_dir}/genomes/${ref_iso}_linear.fna > ${project_dir}/genomes/newOH.fna
+awk -F'\t' '{print $2}' ${project_dir}/genomes/${ref_iso_raw}_linear.fna > ${project_dir}/genomes/newOH.fna
 awk -v ref_contig="$ref_contig" 'BEGIN { ORS="NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN"; print ">" ref_contig "\n" } { print }' < ${project_dir}/genomes/newOH.fna > ${project_dir}/genomes/${ref_iso}_1.fna
-rm ${project_dir}/genomes/${ref_iso}.fna
-rm ${project_dir}/genomes/${ref_iso}_linear.fna
+# Annie: rm ${project_dir}/genomes/${ref_iso}.fna
+rm ${project_dir}/genomes/${ref_iso_raw}${genome_ext}
+rm ${project_dir}/genomes/${ref_iso_raw}_linear.fna
 rm ${project_dir}/genomes/newOH.fna
-mv ${project_dir}/genomes/${ref_iso}_1.fna ${project_dir}/genomes/${ref_iso}${genome_ext}
+mv ${project_dir}/genomes/${ref_iso}_1.fna ${project_dir}/genomes/${ref_iso_raw}${genome_ext}
 
 #edit phybreak_parameter file
-sed "s|.project_dir|$project_dir|g" phybreak_parameters_template.txt > phybreak_parameters.txt
+# Annie:sed "s|.project_dir|$project_dir|g" phybreak_parameters_template.txt > phybreak_parameters.txt
+sed "s|.project_dir|$project_dir|g" $SCRIPT_DIR/phybreak_parameters_template.txt > phybreak_parameters.txt
 sed -i "s|.pop_infile_name|$pop_infile_name|g" phybreak_parameters.txt
 sed -i "s|.basename|$basename|g" phybreak_parameters.txt
 sed -i "s|.ref_iso|$ref_iso|g" phybreak_parameters.txt

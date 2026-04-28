@@ -9,5 +9,6 @@ output_prefix = .basename
 ref_iso = .ref_iso
 ref_contig = .ref_contig #note that dash '-' characters are converted to underscore '_' characters by mugsy, also needs to be >3000bp
 
-len_block_threshold = 1000 #minimum length of a degapped alignment block 
+len_block_threshold = 1000 #minimum length of a degapped alignment block
 gap_prop_thresh = 0.5 #maximum proportion of alignment block that can be '-'
+min_genome_block_freq = 0.10 #minimum fraction of alignment blocks a genome must appear in; genomes below this are dropped before core-genome extraction

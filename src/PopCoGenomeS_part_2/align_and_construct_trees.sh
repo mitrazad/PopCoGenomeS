@@ -1,6 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Mitra: added so it accesses the conda environments, otherwise it fails silently when it can't find the phybreak environment
+source "$(conda info --base)/etc/profile.d/conda.sh"
 
-PHY_CONFIG=./phybreak_config.sh
+# Mitra: added to make sure the script can find the config file, otherwise it would fail silently
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Annie: PHY_CONFIG=./phybreak_config.sh
+PHY_CONFIG=$SCRIPT_DIR/phybreak_config.sh
 source ${PHY_CONFIG}
 
 # The config file is the list of vertically-inherited genome clusters
@@ -27,9 +32,10 @@ echo ${output_dir}
 cd ${project_dir}/align_and_construct_trees
 
 #Run prep code
-#module load conda
+# Mitra: "module load conda" hashed out
 conda activate ${path_to_PopCoGenomeS}
-sh 00_prepare_phybreak.sh
+# Mitra: specified bash instead of sh
+bash 00_prepare_phybreak.sh
 echo Done!
 
 #Generate multiple sequence alignment 
@@ -45,5 +51,4 @@ phyml -i ${basename}.core.fasta.phy -m 'GTR' -t 'e' -a 'e' -f 'm' -v 'e' > ${bas
 
 #copy tree back to output folder
 cp ${basename}.core.fasta.phy_phyml_tree.txt $output_dir/${OUTFOLDER_2}.core.fasta.phy_phyml_tree.txt
-
 

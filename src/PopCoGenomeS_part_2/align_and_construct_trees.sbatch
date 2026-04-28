@@ -10,6 +10,7 @@
 #usage
 #sbatch -a 1-number of chunks align_and_construct_trees.sbatch <CONFIGFILE>
 
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}")" && pwd)
 PHY_CONFIG=./phybreak_config.sh
 source ${PHY_CONFIG}
 
@@ -37,6 +38,9 @@ echo ${output_dir}
 
 cd ${project_dir}/align_and_construct_trees
 
+# initialize conda for non-interactive shells
+source "$(conda info --base)/etc/profile.d/conda.sh"
+
 #Run prep code
 conda activate ${path_to_PopCoGenomeS}
 sh 00_prepare_phybreak.sh
@@ -55,5 +59,3 @@ phyml -i ${basename}.core.fasta.phy -m 'GTR' -t 'e' -a 'e' -f 'm' -v 'e' > ${bas
 
 #copy tree back to output folder
 cp ${basename}.core.fasta.phy_phyml_tree.txt $output_dir/${OUTFOLDER_2}.core.fasta.phy_phyml_tree.txt
-
-

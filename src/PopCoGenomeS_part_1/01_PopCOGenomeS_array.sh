@@ -7,7 +7,7 @@ echo $THISDIR
 configfile=./config.sh
 source ${configfile}
 
-module load conda
+# module load conda
 conda activate ${path_to_PopCoGenomeS}
 
 export window_size

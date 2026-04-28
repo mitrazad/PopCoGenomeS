@@ -14,20 +14,21 @@ mkdir -p ${output_dir}
 mkdir -p ${final_output_dir}
 
 # Path to genome files. (make sure it ends in a "/")
-genome_dir=../example_genomes/
+genome_dir=../../example_genomes/
 
 # Genome file filename extension.
-genome_ext=.fna
+# Annie: genome_ext=.fna
+genome_ext=.fa
 
 # Are you running on a single machine? Please specify the number of threads to run.
 # This can, at maximum, be the number of logical cores your machine has.
-num_threads=4
+num_threads=10
 
 # Are you running on slurm and want to split the job between different nodes? 
 #Please specifify how many different array jobs you want to split your job into.
 num_chunks=4
 #Please specific how many cores each array job uses.
-num_threads=4
+num_threads=10
 #This is the n th chunk that is run and should be same as the array task number
 chunk_id=${n}
 
@@ -48,7 +49,7 @@ window_size=500
 clonal_cutoff=0.5
 
 # Path to the PopCoGenomeS conda environment
-path_to_PopCoGenomeS='/lisc/home/user/yu/envs/popcogenomes'
+path_to_PopCoGenomeS='/home/azad/miniconda3/envs/popcogenomes'
 
 # Path to the PopCoGenomeS_R conda environment
-path_to_PopCoGenomeS_R='/lisc/home/user/yu/envs/popcogenomes_R'
+path_to_PopCoGenomeS_R='/home/azad/miniconda3/envs/popcogenomes_r'

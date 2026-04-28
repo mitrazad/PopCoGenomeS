@@ -2,6 +2,7 @@ name: popcogenomes_r
 channels:
   - defaults
   - conda-forge
+  - bioconda
 dependencies:
   - r-base=4.2.0
   - r-castor=1.7.6

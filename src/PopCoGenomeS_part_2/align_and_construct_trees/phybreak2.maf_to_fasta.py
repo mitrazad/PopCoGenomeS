@@ -13,6 +13,7 @@ ref_iso = ""
 ref_contig = ""
 len_block_threshold = 0
 gap_prop_thresh = 0.0
+min_genome_block_freq = 0.0
 phyML_loc = ""
 phyML_properties = ""
 
@@ -43,6 +44,8 @@ for line in parameter_file:
 			len_block_threshold = int(line[1].split(" #")[0])
 		elif line[0] == "gap_prop_thresh":
 			gap_prop_thresh = float(line[1].split(" #")[0])
+		elif line[0] == "min_genome_block_freq":
+			min_genome_block_freq = float(line[1].split(" #")[0])
 		elif line[0] == "phyML_loc":
 			phyML_loc = line[1].split(" #")[0]
 		elif line[0] == "phyML_properties":
@@ -99,7 +102,8 @@ def remove_N_only_gaps(msa_dict):
 	remove_sites = []
 	for nt in nt_dict:
 		count = nt_dict[nt]
-		if nt_dict[i]['nt'] <= 1:
+		# Annie: if nt_dict[i]['nt'] <= 1:
+		if nt_dict[nt]['nt'] <= 1:
 			remove_sites.append(nt)
 	out_dict = {}
 	for strain in msa_dict:
@@ -121,7 +125,38 @@ for line in infile:
 	line = line.strip()
 	isolist.append(line)
 infile.close()
-#print(isolist)
+
+# Pre-scan MAF to count per-genome block frequency and drop outliers
+genome_block_count = {}
+total_blocks_seen = 0
+current_block_genomes = set()
+with open(input_dir+output_prefix+".maf","r") as scan_file:
+	for line in scan_file:
+		if line.startswith("a "):
+			if current_block_genomes:
+				total_blocks_seen += 1
+				for g in current_block_genomes:
+					genome_block_count[g] = genome_block_count.get(g, 0) + 1
+			current_block_genomes = set()
+		elif line.startswith("s "):
+			genome = line.split(".")[0].split(" ")[1]
+			current_block_genomes.add(genome)
+	if current_block_genomes:
+		total_blocks_seen += 1
+		for g in current_block_genomes:
+			genome_block_count[g] = genome_block_count.get(g, 0) + 1
+
+if total_blocks_seen > 0 and min_genome_block_freq > 0.0:
+	removed = [iso for iso in isolist
+		if genome_block_count.get(iso, 0) / total_blocks_seen < min_genome_block_freq]
+	if removed:
+		print("Dropping " + str(len(removed)) + " genome(s) below min_genome_block_freq=" +
+			str(min_genome_block_freq) + " (" + str(total_blocks_seen) + " total blocks):")
+		for iso in removed:
+			count = genome_block_count.get(iso, 0)
+			print("  " + iso + ": " + str(count) + " blocks (" +
+				str(round(100.0*count/total_blocks_seen, 1)) + "%)")
+		isolist = [iso for iso in isolist if iso not in set(removed)]
 
 num = 0
 iso = ""
@@ -177,7 +212,7 @@ for line in infile:
 		if contig == ref_contig:
 			start = int(line.split("\t")[2].split(" ")[0])
 			length = int(line.split("\t")[2].split(" ")[1])
-			direc = line.split("\t")[2].split(" ")[3]
+			direc = line.split("\t")[2].split(" ")[2]
 			if direc != "+":
 				start = start+length
 			tup = (start,label)
@@ -321,6 +356,11 @@ block_loc.close()
 #print(full_seqdict)
 
 #write the full, degapped sequences
+if not full_seqdict:
+	sys.exit("ERROR: no alignment block contains all " + str(len(isolist)) +
+		" genomes (max mult seen = " +
+		str(max((len(v) for v in seqdict.values() if isinstance(v, dict)), default=0)) +
+		"). Cannot write core FASTA.")
 corefile = open(input_dir+MSA_name,"w")
 for k in range(0,len(isolist)):
 	iso = isolist[k]

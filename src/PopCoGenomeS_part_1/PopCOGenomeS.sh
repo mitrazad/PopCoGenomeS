@@ -1,4 +1,6 @@
 #!/bin/bash
+export LC_ALL=C
+source $(conda info --base)/etc/profile.d/conda.sh
 
 THISDIR=${BASH_SOURCE[0]}
 THISDIR=${THISDIR%/PopCoGenomeS.sh}
@@ -7,7 +9,7 @@ echo $THISDIR
 configfile=./config.sh
 source ${configfile}
 
-module load conda
+# module load conda
 conda activate ${path_to_PopCoGenomeS}
 
 export window_size

@@ -165,6 +165,9 @@ def get_transfer_measurement(alignment,
                         strain2,
                         str(0),
                         str(0)])
+        # Mitra: added this part, because if there are no blocks after filtering, then the rest of the code will break. 
+        # So we return 0 for all values and skip the rest of the code.
+        return edge, lb
 
     s1temp, s2temp = zip(*filtered_blocks)
 
